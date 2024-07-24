@@ -1,6 +1,6 @@
-# Blogging Website - KathaSagar
+# Blogging Website - VicharSpace
 
-Welcome to **KathaSagar**, a unique blogging platform where stories and thoughts come alive. Our platform provides a space for writers and readers to share and explore a wide array of content, ranging from personal experiences to creative writing, all presented in a seamless and engaging manner.
+Welcome to **VicharSpace**, a unique blogging platform where stories and thoughts come alive. Our platform provides a space for writers and readers to share and explore a wide array of content, ranging from personal experiences to creative writing, all presented in a seamless and engaging manner.
 
 ## Features
 
