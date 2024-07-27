@@ -4,8 +4,9 @@ import { withAccelerate } from "@prisma/extension-accelerate";
 import { sign, verify } from "hono/jwt";
 import bcrypt from "bcryptjs";
 
-// Importing the Zod type Schema for checking the types of the data:
-import { signUpZodSchema, signInZodSchema } from '../zod';
+// Importing the Zod type Schema for checking the types of the data from the NPM:
+// -> @jhaniraj/medium-common
+import { signUpZodSchema, signInZodSchema } from "@jhaniraj/medium-common-2";
 
 export const userRouter = new Hono<{
     Bindings: {
@@ -14,7 +15,7 @@ export const userRouter = new Hono<{
     }
 }>();
 
-userRouter.post("/signup", async(c) => {
+userRouter.post("/signup", async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate());
@@ -34,7 +35,7 @@ userRouter.post("/signup", async(c) => {
                     email
                 }
             });
-            if(existingUser) {
+            if (existingUser) {
                 c.status(503);
                 return c.json({
                     msg: "User already exist with this email!!!"
@@ -48,7 +49,7 @@ userRouter.post("/signup", async(c) => {
                         password: hashedPassword
                     }
                 })
-                if(newUser) {
+                if (newUser) {
                     const jwt = await sign({ id: newUser.id }, c.env.JWT_SECRET);
                     c.status(200);
                     return c.json({
@@ -80,27 +81,35 @@ userRouter.post("/signin", async (c) => {
     const { email, password } = await c.req.json();
 
     try {
-        const user = await prisma.user.findUnique({
-            where: {
-                email: email
-            }
-        })
-        if (!user) {
-            c.status(403);
-            return c.json({ error: "Invalid Credentials" })
+        const parsedValue = signInZodSchema.safeParse({ email, password });
+        if (!parsedValue.success) {
+            c.status(501);
+            return c.json({
+                msg: "Please enter the supported data types"
+            })
         } else {
-            const comparePassword = await bcrypt.compare(password, user.password);
-            if(!comparePassword) {
+            const user = await prisma.user.findUnique({
+                where: {
+                    email: email
+                }
+            })
+            if (!user) {
                 c.status(403);
-                return c.json({
-                    msg: "Incorrect Password!!!"
-                })
+                return c.json({ error: "Invalid Credentials" })
             } else {
-                const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
-                return c.json({
-                    token: jwt,
-                    msg: "Signed in Successfully"
-                })
+                const comparePassword = await bcrypt.compare(password, user.password);
+                if (!comparePassword) {
+                    c.status(403);
+                    return c.json({
+                        msg: "Incorrect Password!!!"
+                    })
+                } else {
+                    const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
+                    return c.json({
+                        token: jwt,
+                        msg: "Signed in Successfully"
+                    })
+                }
             }
         }
     } catch (err: any) {

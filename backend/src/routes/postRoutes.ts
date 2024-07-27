@@ -2,6 +2,7 @@ import { Context, Hono } from "hono";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { verify } from "hono/jwt";
+import { createrBlogInput, updateBlogInput } from "@jhaniraj/medium-common-2";
 
 export const postRouter = new Hono<{
     Bindings: {
@@ -45,11 +46,6 @@ postRouter.use("/*", async (c, next) => {
 })
 
 // Routes to Upload the Blog and Update the Blog:
-interface createPostProps {
-    title: string,
-    content: string,
-    userId: string
-}
 postRouter.post("/", async (c) => {
     const userId = c.get("jwtPayload");
 
@@ -60,22 +56,30 @@ postRouter.post("/", async (c) => {
     const body = await c.req.json();
 
     try {
-        const newPost = await prisma.post.create({
-            data: {
-                title: body.title,
-                content: body.content,
-                authorId: Number(userId)
-            }
-        })
-        if (!newPost) {
+        const parsedValue = createrBlogInput.safeParse(body);
+        if (!parsedValue.success) {
             c.status(501);
             return c.json({
-                msg: "Failed to create new post!!!"
+                msg: "Please enter the supported data types"
             })
         } else {
-            return c.json({
-                id: newPost.id
+            const newPost = await prisma.post.create({
+                data: {
+                    title: body.title,
+                    content: body.content,
+                    authorId: Number(userId)
+                }
             })
+            if (!newPost) {
+                c.status(501);
+                return c.json({
+                    msg: "Failed to create new post!!!"
+                })
+            } else {
+                return c.json({
+                    id: newPost.id
+                })
+            }
         }
     } catch (err: any) {
         console.log("Error occurred while creating Post: " + err);
@@ -88,45 +92,54 @@ postRouter.post("/", async (c) => {
 postRouter.put("blog/:id", async (c) => {
     const userId = c.get("jwtPayload");
     const postId = c.req.param("id");
+    const newPostId = Number(postId);
 
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL,
     }).$extends(withAccelerate());
 
     try {
-        const body = await c.req.json();
+        const { title, content } = await c.req.json();
 
-        const user = await prisma.user.findUnique({
-            where: {
-                id: Number(userId)
-            }
-        })
-        if (!user) {
-            console.log("No user found");
-            c.status(403);
+        const parsedValue = updateBlogInput.safeParse({ title, content, id: newPostId });
+        if (!parsedValue.success) {
+            c.status(501);
             return c.json({
-                msg: "No user found"
+                msg: "Please enter the supported data types"
             })
         } else {
-            const response = await prisma.post.update({
+            const user = await prisma.user.findUnique({
                 where: {
-                    id: Number(postId)
-                },
-                data: {
-                    title: body.title,
-                    content: body.content
+                    id: Number(userId)
                 }
             })
-            if (!response) {
-                c.status(501);
+            if (!user) {
+                console.log("No user found");
+                c.status(403);
                 return c.json({
-                    msg: "Failed to update the post"
+                    msg: "No user found"
                 })
             } else {
-                c.status(200);
-                return c.json({
-                    msg: "Post updated successfully"
+                const response = await prisma.post.update({
+                    where: {
+                        id: Number(postId)
+                    },
+                    data: {
+                        title: title,
+                        content: content
+                    }
                 })
+                if (!response) {
+                    c.status(501);
+                    return c.json({
+                        msg: "Failed to update the post"
+                    })
+                } else {
+                    c.status(200);
+                    return c.json({
+                        msg: "Post updated successfully"
+                    })
+                }
             }
         }
     } catch (err: any) {
