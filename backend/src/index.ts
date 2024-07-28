@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import { sign } from "hono/jwt";
 import bcrypt from "bcryptjs";
+import { cors } from "hono/cors";
 
 // Router to clean up the routing:
 import { userRouter } from "./routes/userRoutes";
@@ -21,6 +22,7 @@ const app = new Hono<{
 app.get("/", (c) => {
     return c.text("Hello");
 })
+app.use("/*", cors());
 
 // One thing to notice is that you cannot initialize an prisma outside the route as it need an access to
 // the env variables which is not supported in the Cloudflares workers.

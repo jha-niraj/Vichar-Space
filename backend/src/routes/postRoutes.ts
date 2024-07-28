@@ -77,7 +77,8 @@ postRouter.post("/", async (c) => {
                 })
             } else {
                 return c.json({
-                    id: newPost.id
+                    id: newPost.id,
+                    msg: "Post created successfully"
                 })
             }
         }
@@ -163,6 +164,16 @@ postRouter.get("blog/:id", async (c) => {
         const post = await prisma.post.findUnique({
             where: {
                 id: Number(postId)
+            },
+            select: {
+                id: true,
+                title: true,
+                content: true,
+                author: {
+                    select: {
+                        name: true
+                    }
+                }
             }
         })
         if (!post) {
@@ -192,7 +203,18 @@ postRouter.get("/bulk", async (c) => {
     }).$extends(withAccelerate());
 
     try {
-        const posts = await prisma.post.findMany({});
+        const posts = await prisma.post.findMany({
+            select: {
+                title: true,
+                content: true,
+                id: true,
+                author: {
+                    select: {
+                        name: true
+                    }
+                }
+            }
+        });
         if (!posts) {
             console.log("Failed to fetch all the blogs");
             c.status(501);

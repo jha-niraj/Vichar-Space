@@ -17,6 +17,7 @@
     "@cloudflare/workers-types": "^4.20240529.0",
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
     "@types/node": "^20.14.9",
     "wrangler": "^3.57.2"
   }
