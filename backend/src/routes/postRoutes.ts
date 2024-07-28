@@ -213,7 +213,7 @@ postRouter.get("/bulk", async (c) => {
                         name: true
                     }
                 }
-            }
+            },
         });
         if (!posts) {
             console.log("Failed to fetch all the blogs");
