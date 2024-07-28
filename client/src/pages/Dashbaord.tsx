@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-
 import PostCard from "@/components/PostCard";
 import Navbar from "@/components/Navbar";
 import SkeletonCard from "@/components/Skeleton";
@@ -11,7 +9,7 @@ const Dashboard = () => {
     return (
         <section className="flex flex-col w-full">
             <Navbar />
-            <main className="w-full flex flex-col gap-4 mt-24">
+            <main className="w-full flex flex-col gap-4 mt-28">
                 { loading ? 
                         <div className="w-[90%] sm:w-[80%] flex flex-col gap-10 bg-white md:w-[70%] mx-auto cursor-pointer overflow-hidden hover:shadow-lg transition-shadow duration-300 ease-in-out">
                             <SkeletonCard />

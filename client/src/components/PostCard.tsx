@@ -21,7 +21,7 @@ const PostCard: React.FC<PostCardProps> = ({
     profileImage
 }) => {
     return (
-        <Link to={`/blog/${id}`} className="w-[90%] sm:w-[80%] md:w-[70%] mx-auto bg-white cursor-pointer rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 ease-in-out">
+        <Link to={`/blog/${id}`} className="w-[90%] sm:w-[85%] md:w-[80%] lg:w-[75%] mx-auto bg-white cursor-pointer rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 ease-in-out">
             <div className="p-6">
                 <div className="flex items-center mb-4">
                     <img className="h-12 w-12 rounded-full object-cover mr-4" src={profileImage} alt={`${authorName}'s profile`} />

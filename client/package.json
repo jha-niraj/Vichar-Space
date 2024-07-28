@@ -19,9 +19,11 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.416.0",
+    "quill": "^2.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
+    "react-quill": "^2.0.0",
     "react-router-dom": "^6.25.1",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7"

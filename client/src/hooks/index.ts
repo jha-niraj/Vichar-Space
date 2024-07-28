@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { BASE_URL } from "@/config";
 
-interface PostProps {
+interface PostsProps {
     id: number;
     title: string;
     content: string;
@@ -11,7 +11,7 @@ interface PostProps {
     }
 }
 export const useBlogs = () => {
-    const [ posts, setPosts ] = useState<PostProps[]>([]);
+    const [ posts, setPosts ] = useState<PostsProps[]>([]);
     const [ loading, setLoading ] = useState<Boolean>(true);
 
     useEffect(() => {
@@ -39,11 +39,16 @@ export const useBlogs = () => {
     }
 }
 
-// interface PostProp {
-//     id: string | null
-// }
-export const useBlog = ( id : string ) => {
-    const [ post, setPost ] = useState();
+interface PostProp {
+    id: string;
+    title: string;
+    content: string;
+    author: {
+        name: string
+    }
+}
+export const useBlog = (id: string | undefined) => {
+    const [ post, setPost ] = useState<PostProp | undefined>(undefined);
     const [ loading, setLoading ] = useState<Boolean>(true);
 
     useEffect(() => {
