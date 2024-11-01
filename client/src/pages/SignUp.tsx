@@ -4,11 +4,12 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
 // Importing the components:
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Quote from "@/components/Quote";
 import { SignUpInput } from "@jhaniraj/medium-common-2";
 import { BASE_URL } from "@/config";
+import { useUser } from "@/context/UserContext";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 
 const SignUp = () => {
     const [ signUp, setSignUp ] = useState<SignUpInput>({
@@ -16,25 +17,35 @@ const SignUp = () => {
         email: "",
         password: ""
     })
+    const [ submitting, setIsSubmitting ] = useState<Boolean>(false);
     const navigate = useNavigate();
+    const { setUser } = useUser();
 
     const handleSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
         try {
             const response = await axios.post(`${BASE_URL}/user/signup`, signUp);
             if(!response) {
                 throw new Error("Failed to Sign Up");
             } 
-            const token = response.data.token;
-            localStorage.setItem("token", token);
+            const user = response.data;
+            setUser({
+                userId: user.userId,
+                name: user.name,
+                email: user.email,
+                token: user.token
+            })
             toast.success(response.data.msg);
             setTimeout(() => {
-                navigate("/");
+                navigate("/profile");
             }, 1000);
         } catch(err: any) {
             console.log("Error occurred while signup: " + err);
             toast.error(err.response.data.msg);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -66,14 +77,18 @@ const SignUp = () => {
                                 password: e.target.value
                             }))} />
                         </div>
-                        <Button type="submit" className="w-full">Sign Up</Button>
+                        <RainbowButton type="submit" className="w-full">
+                            {
+                                submitting ? "Signing Up..." : "Sign Up"
+                            }
+                        </RainbowButton>
                     </form>
                     <hr />
                     <div className="mt-6 text-center">
                         <div className="text-sm text-gray-600 flex gap-2 items-center justify-center">
                             <h1 className="text-sm font-medium">Already have an account?</h1>
                             <Link to="/signin" className="font-medium text-sm text-sky-600 hover:text-indigo-500">
-                                Sign in
+                                Sign In
                             </Link>
                         </div>
                     </div>

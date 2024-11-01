@@ -4,36 +4,56 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button"
 import Quote from "@/components/Quote";
 import { SignInInput } from "@jhaniraj/medium-common-2";
 import { BASE_URL } from "@/config";
+import { useUser } from "@/context/UserContext";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 
 const SignIn = () => {
-    const [ signIn, setSignIn ] = useState<SignInInput>({
+    const [signIn, setSignIn] = useState<SignInInput>({
         email: "",
         password: ""
     })
-
+    const [ submitting, setIsSubmitting ] = useState<Boolean>(false);
     const navigate = useNavigate();
+    const { setUser } = useUser();
 
     const handleSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
         try {
             const response = await axios.post(`${BASE_URL}/user/signin`, signIn);
-            if(!response) {
+            if (!response || !response.data) {
                 throw new Error("Failed to Sign In");
-            } 
-            const token = response.data.token;
-            localStorage.setItem("token", token);
-            toast.success(response.data.msg);
+            }
+            const { msg, userId, name, email, token, error } = response.data;
+            if (error) {
+                toast.error(error);
+            }
+            setUser({
+                userId: userId,
+                name: name,
+                email: email,
+                token: token
+            })
+            toast.success(msg);
             setTimeout(() => {
-                navigate("/");
+                navigate("/profile");
             }, 1000);
-        } catch(err: any) {
-            console.log("Error occurred while signup: " + err);
-            toast.error("Failed to Sign In, Try again");
+        } catch (err: any) {
+            if (err.response && err.response.data && err.response.data.msg) {
+                toast.error(err.response.data.msg);
+            } else if (err.response && err.response.data && err.response.data.error) {
+                toast.error(err.response.data.error);
+            } else {
+                toast.error("Failed to Sign In, Try again");
+            }
+
+            console.log("Error occurred while signing in:", err);
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -46,32 +66,36 @@ const SignIn = () => {
                     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                         <div className="flex flex-col gap-1">
                             <label className="text-md font-medium">Username</label>
-                            <Input type="text" placeholder="Enter your username" onChange={(e: any) => setSignIn(c => ({
+                            <Input type="text" required placeholder="Enter your username" onChange={(e: any) => setSignIn(c => ({
                                 ...c,
                                 email: e.target.value
                             }))} />
                         </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-md font-medium">Password</label>
-                            <Input type="password" placeholder="Create a password" onChange={(e: any) => setSignIn(c => ({
+                            <Input type="password" required placeholder="Create a password" onChange={(e: any) => setSignIn(c => ({
                                 ...c,
                                 password: e.target.value
                             }))} />
                         </div>
-                        <Button type="submit" className="w-full">Sign Up</Button>
+                        <RainbowButton type="submit" className="w-full">
+                            {
+                                submitting ? "Signing In..." : "Sign In"
+                            }
+                        </RainbowButton>                    
                     </form>
                     <hr />
                     <div className="mt-6 text-center">
                         <p className="text-sm text-gray-600 flex gap-2 items-center justify-center">
                             <h1 className="text-sm font-medium">Don't have an account?</h1>
                             <Link to="/signup" className="font-medium text-sm text-sky-600 hover:text-indigo-500">
-                                Sign up
+                                Sign Up
                             </Link>
                         </p>
                     </div>
                 </div>
             </div>
-            <div className="hidden bg-gray-200 md:flex flex-col items-center justify-center">
+            <div className="hidden bg-gray-200 rounded-lg md:flex flex-col items-center justify-center">
                 <Quote />
             </div>
         </main>

@@ -16,7 +16,7 @@ const PostDetails: React.FC<PostDetailsProps> = ({
     authorDescription
 }) => {
     return (
-        <div className="w-[90%] mx-auto p-5 flex gap-10 md:gap-3 flex-col md:flex-row bg-white shadow-md rounded-lg">
+        <div className="w-[90%] mx-auto p-5 flex gap-10 md:gap-3 flex-col md:flex-row bg-white text-black shadow-md rounded-lg">
             <div className="w-full md:w-[75%] flex flex-col gap-3 pr-3 md:border-r">
                 <div>
                     <h1 className="text-4xl font-bold">{title}</h1>

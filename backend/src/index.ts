@@ -35,4 +35,59 @@ app.use("/*", cors());
 app.route("api/v1/user", userRouter);
 app.route("api/v1/post", postRouter);
 
+// Sending an random 5 blog post without doing any authentication to show on the HomePage:
+// app.get("/randomposts", async(c) => {
+//     const prisma = new PrismaClient({
+//         datasourceUrl: c.env.DATABASE_URL,
+//     }).$extends(withAccelerate());
+
+//     try {
+//         const posts = await prisma.post.findMany(); // Fetch all posts
+//         const shuffledPosts = posts.sort(() => 0.5 - Math.random()); // Shuffle the posts
+//         const randomPosts = shuffledPosts.slice(0, 5); // Select 5 random posts
+//         return randomPosts;
+//     } catch (err: any) {
+//         console.log("Error while sending an random 5 posts");
+//     }
+// })
+
+app.get("api/v1/posts/bulk", async (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    try {
+        const posts = await prisma.post.findMany({
+            select: {
+                title: true,
+                content: true,
+                id: true,
+                author: {
+                    select: {
+                        name: true
+                    }
+                }
+            },
+        });
+        if (!posts) {
+            console.log("Failed to fetch all the blogs");
+            c.status(501);
+            return c.json({
+                msg: "Failed to fetch all blogs"
+            })
+        } else {
+            c.status(200);
+            return c.json({
+                posts
+            })
+        }
+    } catch (err: any) {
+        console.log("Failed to get the blogs: " + err);
+        c.status(501);
+        c.json({
+            msg: "Failed to get all the blogs"
+        })
+    }
+})
+
 export default app;

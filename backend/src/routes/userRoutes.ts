@@ -27,7 +27,7 @@ userRouter.post("/signup", async(c) => {
         if (!parsedValue.success) {
             c.status(501);
             return c.json({
-                msg: "Incorrect data types"
+                error: "Incorrect data types"
             })
         } else {
             const existingUser = await prisma.user.findUnique({
@@ -38,7 +38,7 @@ userRouter.post("/signup", async(c) => {
             if(existingUser) {
                 c.status(503);
                 return c.json({
-                    msg: "User already exist with this email!!!"
+                    error: "User already exist with this email!!!"
                 })
             } else {
                 const hashedPassword = await bcrypt.hash(password, 10);
@@ -54,12 +54,15 @@ userRouter.post("/signup", async(c) => {
                     c.status(200);
                     return c.json({
                         msg: "User SignUp Successfull",
+                        userId: newUser.id,
+                        name: newUser.name,
+                        email: newUser.email,
                         token: jwt
                     })
                 } else {
                     c.status(503);
                     return c.json({
-                        msg: "Error while SignUp!!!"
+                        error: "Error while SignUp!!!"
                     })
                 }
             }
@@ -73,7 +76,7 @@ userRouter.post("/signup", async(c) => {
     }
 })
 
-userRouter.post("/signin", async (c) => {
+userRouter.post("/signin", async(c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL,
     }).$extends(withAccelerate());
@@ -85,7 +88,7 @@ userRouter.post("/signin", async (c) => {
         if (!parsedValue.success) {
             c.status(501);
             return c.json({
-                msg: "Please enter the supported data types"
+                error: "Please enter the correct data types"
             })
         } else {
         const user = await prisma.user.findUnique({
@@ -95,25 +98,32 @@ userRouter.post("/signin", async (c) => {
         })
         if (!user) {
             c.status(403);
-            return c.json({ error: "Invalid Credentials" })
+            return c.json({ 
+                error: "Invalid Credentials" 
+            })
         } else {
             const comparePassword = await bcrypt.compare(password, user.password);
             if(!comparePassword) {
                 c.status(403);
                 return c.json({
-                    msg: "Incorrect Password!!!"
+                    error: "Incorrect Password!!!"
                 })
             } else {
                 const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
                 return c.json({
-                    token: jwt,
-                    msg: "Signed in Successfully"
+                    msg: "Signed in Successfully",
+                    userId: user.id,
+                    name: user.name,
+                    email: user.email,
+                    token: jwt
                 })
             }
         }
     }
     } catch (err: any) {
         c.status(403);
-        return c.json({ error: "Error while signin" });
+        return c.json({ 
+            error: "Error while signin" 
+        });
     }
 })

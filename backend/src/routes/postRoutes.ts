@@ -152,7 +152,7 @@ postRouter.put("blog/:id", async (c) => {
     }
 })
 
-// Routes to get all the blogs and the particular blog with id:
+// Routes to get particular blog with id:
 postRouter.get("blog/:id", async (c) => {
     const postId = c.req.param("id");
     console.log(postId);
@@ -195,43 +195,142 @@ postRouter.get("blog/:id", async (c) => {
         })
     }
 })
-
-// After completion of the project, we have add pagination here to make the api efficient
-postRouter.get("/bulk", async (c) => {
+postRouter.get("blogs/:userId", async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL,
     }).$extends(withAccelerate());
 
     try {
-        const posts = await prisma.post.findMany({
-            select: {
-                title: true,
-                content: true,
-                id: true,
-                author: {
+        const userId = parseInt(c.req.param('userId'));
+
+        if (isNaN(userId)) {
+            c.status(400);
+            return c.json({
+                success: false,
+                message: 'Invalid user ID'
+            });
+        }
+
+        const userWithPosts = await prisma.user.findUnique({
+            where: {
+                id: userId
+            },
+            include: {
+                posts: {
+                    orderBy: {
+                        id: 'desc'
+                    },
                     select: {
-                        name: true
+                        id: true,
+                        title: true,
+                        content: true,
+                        published: true,
+                        authorId: true,
+                        author: {
+                            select: {
+                                name: true,
+                                email: true
+                            }
+                        }
                     }
                 }
-            },
+            }
         });
-        if (!posts) {
-            console.log("Failed to fetch all the blogs");
-            c.status(501);
+
+        if (!userWithPosts) {
+            c.status(404);
             return c.json({
-                msg: "Failed to fetch all blogs"
-            })
-        } else {
-            c.status(200);
-            return c.json({
-                posts
-            })
+                success: false,
+                message: 'User not found'
+            });
         }
-    } catch (err: any) {
-        console.log("Failed to get the blogs: " + err);
-        c.status(501);
-        c.json({
-            msg: "Failed to get all the blogs"
-        })
+
+        return c.json({
+            success: true,
+            data: userWithPosts.posts
+        });
+
+    } catch (error) {
+        console.error('Error fetching user posts:', error);
+        c.status(500);
+        return c.json({
+            success: false,
+            message: 'Internal server error while fetching posts'
+        });
+    } finally {
+        await prisma.$disconnect();
     }
-})
+});
+
+// postRouter.get("blogs/personal/:userId", async (c) => {
+//     const userId = c.req.param("userId");
+//     console.log(userId);
+//     const prisma = new PrismaClient({
+//         datasourceUrl: c.env?.DATABASE_URL,
+//     }).$extends(withAccelerate());
+
+//     try {
+//         const userId = c.req.param("userId");
+//         if (!userId) {
+//             c.status(400);
+//             return c.json({ msg: "userId is required" });
+//         }
+
+//         const posts = await prisma.user.findUnique({
+//             where: {
+//                 id: userId
+//             },
+//             select: {
+//                 posts: true
+//             }
+//         })
+//         return posts;
+//     } catch (err: any) {
+//         console.log("Error while getting the Post for Personal Profile: " + err);
+//         c.status(501);
+//         return c.json({
+//             msg: "Error while getting the posts!!!"
+//         })
+//     }
+// })
+
+// After completion of the project, we have add pagination here to make the api efficient
+// postRouter.get("/bulk", async (c) => {
+//     const prisma = new PrismaClient({
+//         datasourceUrl: c.env?.DATABASE_URL,
+//     }).$extends(withAccelerate());
+
+//     try {
+//         const posts = await prisma.post.findMany({
+//             select: {
+//                 title: true,
+//                 content: true,
+//                 id: true,
+//                 author: {
+//                     select: {
+//                         name: true
+//                     }
+//                 }
+//             },
+//         });
+//         if (!posts) {
+//             console.log("Failed to fetch all the blogs");
+//             c.status(501);
+//             return c.json({
+//                 msg: "Failed to fetch all blogs"
+//             })
+//         } else {
+//             c.status(200);
+//             return c.json({
+//                 posts
+//             })
+//         }
+//     } catch (err: any) {
+//         console.log("Failed to get the blogs: " + err);
+//         c.status(501);
+//         c.json({
+//             msg: "Failed to get all the blogs"
+//         })
+//     }
+// })
+// -> I have moved this to the non-authenticated zone as this part should be send to the user even though they are not authnticated.
